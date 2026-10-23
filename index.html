@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio Ninja: Quiz Interativo de Naruto</title>
+    <!-- Fonts Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Permanent+Marker&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ==========================================================================
+           VARIÁVEIS DE CORES E TEMA (NINJA DE KONOHA)
+           ========================================================================== */
+        :root {
+            --naruto-orange: #ff6b00;
+            --naruto-orange-dark: #cc5200;
+            --naruto-orange-light: #ff8533;
+            --konoha-black: #121214;
+            --konoha-dark-gray: #1e1e24;
+            --konoha-card-bg: #282830;
+            --leaf-green: #2ecc71;
+            --leaf-green-dark: #27ae60;
+            --sharingan-red: #e74c3c;
+            --sharingan-red-dark: #c0392b;
+            --chakra-blue: #3498db;
+            --text-light: #f5f6fa;
+            --text-muted: #a0a0b0;
+            --accent-gold: #f1c40f;
+            --border-radius: 12px;
+            --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* RESET & BASE */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--konoha-black);
+            color: var(--text-light);
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(255, 107, 0, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(231, 76, 60, 0.08) 0%, transparent 40%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* CONTÊINER PRINCIPAL */
+        .app-container {
+            width: 100%;
+            max-width: 850px;
+            padding: 20px;
+            margin: 0 auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* HEADER SEMÂNTICO */
+        header {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .ninja-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--naruto-orange), var(--sharingan-red));
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+        }
+
+        header h1 {
+            font-family: 'Permanent Marker', cursive, sans-serif;
+            font-size: 2.8rem;
+            color: var(--naruto-orange);
+            text-shadow: 3px 3px 0px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* BARRA DE PROGRESSO & INDICADORES */
+        .quiz-status-bar {
+            background-color: var(--konoha-dark-gray);
+            border-radius: var(--border-radius);
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .status-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .question-number {
+            color: var(--naruto-orange);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .difficulty-tag {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .diff-facil { background-color: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+        .diff-medio { background-color: rgba(241, 196, 15, 0.2); color: #f1c40f; border: 1px solid #f1c40f; }
+        .diff-dificil { background-color: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; }
+
+        .progress-track {
+            width: 100%;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--naruto-orange), var(--accent-gold));
+            border-radius: 5px;
+            transition: width 0.4s ease;
+        }
+
+        /* MAIN CARD DO QUIZ */
+        main {
+            width: 100%;
+        }
+
+        .quiz-card {
+            background-color: var(--konoha-card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            position: relative;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* TELA INICIAL (INTRODUÇÃO) */
+        .start-screen {
+            text-align: center;
+            padding: 20px 10px;
+        }
+
+        .start-screen h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--text-light);
+        }
+
+        .start-screen p {
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            font-size: 1.05rem;
+        }
+
+        .instructions-list {
+            text-align: left;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            border-left: 4px solid var(--naruto-orange);
+        }
+
+        .instructions-list li {
+            margin-bottom: 10px;
+            list-style-type: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .instructions-list i {
+            color: var(--naruto-orange);
+        }
+
+        /* ESTRUTURA DA PERGUNTA */
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: var(--text-light);
+            line-height: 1.4;
+        }
+
+        .options-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            background-color: var(--konoha-dark-gray);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            user-select: none;
+        }
+
+        .option-label:hover:not(.disabled) {
+            border-color: var(--naruto-orange-light);
+            background-color: rgba(255, 107, 0, 0.05);
+            transform: translateX(4px);
+        }
+
+        .option-input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .option-prefix {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 15px;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .option-text {
+            font-size: 1rem;
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .option-icon {
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        /* ESTADOS DE SELEÇÃO E VALIDAÇÃO DA RESPOSTA */
+        .option-label.selected {
+            border-color: var(--naruto-orange);
+            background-color: rgba(255, 107, 0, 0.15);
+        }
+
+        .option-label.correct {
+            border-color: var(--leaf-green) !important;
+            background-color: rgba(46, 204, 113, 0.15) !important;
+            color: #ffffff;
+        }
+        .option-label.correct .option-prefix {
+            background-color: var(--leaf-green);
+            color: white;
+        }
+        .option-label.correct .option-icon {
+            opacity: 1;
+            color: var(--leaf-green);
+        }
+
+        .option-label.incorrect {
+            border-color: var(--sharingan-red) !important;
+            background-color: rgba(231, 76, 60, 0.15) !important;
+            color: #ffffff;
+        }
+        .option-label.incorrect .option-prefix {
+            background-color: var(--sharingan-red);
+            color: white;
+        }
+        .option-label.incorrect .option-icon {
+            opacity: 1;
+            color: var(--sharingan-red);
+        }
+
+        .option-label.disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        /* CAIXA DE FEEDBACK E EXPLICAÇÃO */
+        .feedback-box {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            display: none;
+            animation: slideDown 0.3s ease-out forwards;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback-box.correct-fb {
+            background-color: rgba(46, 204, 113, 0.1);
+            border: 1px solid var(--leaf-green);
+            color: #d4edda;
+        }
+
+        .feedback-box.incorrect-fb {
+            background-color: rgba(231, 76, 60, 0.1);
+            border: 1px solid var(--sharingan-red);
+            color: #f8d7da;
+        }
+
+        .feedback-header {
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* NAVEGAÇÃO E BOTÕES */
+        .actions-container {
+            margin-top: 25px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--naruto-orange), var(--naruto-orange-dark));
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 14px rgba(255, 107, 0, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4);
+            background: linear-gradient(135deg, var(--naruto-orange-light), var(--naruto-orange));
+        }
+
+        .btn:disabled {
+            background: var(--konoha-dark-gray);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-light);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--text-light);
+        }
+
+        /* TELA DE RESULTADO / PLACAR FINAL */
+        .result-screen {
+            text-align: center;
+            padding: 10px 0;
+            display: none;
+        }
+
+        .rank-badge-large {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--naruto-orange), var(--accent-gold));
+            color: var(--konoha-black);
+            box-shadow: 0 0 25px rgba(255, 107, 0, 0.5);
+            animation: pulseRank 2s infinite alternate;
+        }
+
+        @keyframes pulseRank {
+            0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 107, 0, 0.4); }
+            100% { transform: scale(1.05); box-shadow: 0 0 35px rgba(241, 196, 15, 0.7); }
+        }
+
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            font-weight: 800;
+        }
+
+        .rank-name {
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-family: 'Permanent Marker', cursive, sans-serif;
+        }
+
+        .score-display-card {
+            background-color: var(--konoha-dark-gray);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .score-val {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--naruto-orange);
+        }
+
+        .score-lbl {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .result-description {
+            color: var(--text-light);
+            font-size: 1rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        /* MODAL EQUIPE & GITHUB PAGES */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .modal-backdrop.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background-color: var(--konoha-card-bg);
+            width: 90%;
+            max-width: 600px;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            border: 1px solid var(--naruto-orange);
+            box-shadow: var(--box-shadow);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-title {
+            color: var(--naruto-orange);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .team-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            text-align: left;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            background-color: var(--konoha-dark-gray);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            border-radius: 6px;
+            color: var(--text-light);
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--naruto-orange);
+        }
+
+        .github-instructions {
+            background-color: var(--konoha-dark-gray);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            text-align: left;
+            border-left: 3px solid var(--chakra-blue);
+        }
+
+        .github-instructions code {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--accent-gold);
+            font-family: monospace;
+        }
+
+        /* FOOTER SEMÂNTICO */
+        footer {
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .footer-link {
+            color: var(--naruto-orange);
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+
+        /* MEDIA QUERIES (RESPONSIVIDADE) */
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .quiz-card {
+                padding: 20px 15px;
+            }
+
+            .question-text {
+                font-size: 1.1rem;
+            }
+
+            .score-display-card {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .actions-container {
+                flex-direction: column-reverse;
+                gap: 10px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- HEADER SEMÂNTICO -->
+        <header role="banner">
+            <span class="ninja-badge"><i class="fa-solid fa-scroll"></i> Exame Chunin / Jounin</span>
+            <h1>Quiz Naruto Uzumaki</h1>
+            <p>Teste seus conhecimentos do Universo Ninja de Masashi Kishimoto</p>
+        </header>
+
+        <!-- BARRA DE STATUS / PROGRESSO DO QUIZ -->
+        <div class="quiz-status-bar" id="status-bar" style="display: none;">
+            <div class="status-info">
+                <span class="question-number" id="question-count-display">
+                    <i class="fa-solid fa-khanda"></i> Pergunta 1 de 15
+                </span>
+                <span class="difficulty-tag diff-facil" id="difficulty-display">Fácil</span>
+            </div>
+            <div class="progress-track" aria-label="Progresso do quiz">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT CONTAINER -->
+        <main id="main-content" role="main">
+            <article class="quiz-card">
+                
+                <!-- TELA INICIAL -->
+                <section id="start-screen" class="start-screen">
+                    <h2>Pronto para provar seu Jeito Ninja?</h2>
+                    <p>Responda às 15 perguntas sobre o universo de Naruto Clássico, Shippuden e curiosidades ninja!</p>
+                    
+                    <div class="instructions-list">
+                        <ul>
+                            <li><i class="fa-solid fa-check-circle"></i> 15 perguntas de escolha múltipla com respostas explicadas instantaneamente.</li>
+                            <li><i class="fa-solid fa-check-circle"></i> O placar final calcula sua Nota (0 a 10) e atribui sua Rang (Patente Ninja).</li>
+                            <li><i class="fa-solid fa-check-circle"></i> Sem limite de tempo estrito, leia cada pergunta atentamente.</li>
+                        </ul>
+                    </div>
+
+                    <button class="btn" id="start-btn">
+                        <i class="fa-solid fa-fire"></i> Iniciar Desafio Ninja
+                    </button>
+                </section>
+
+                <!-- TELA DE PERGUNTAS -->
+                <section id="question-screen" style="display: none;">
+                    <h2 class="question-text" id="question-text">Carregando pergunta...</h2>
+
+                    <form class="options-form" id="options-form" onsubmit="event.preventDefault();">
+                        <!-- Opções injetadas via JS -->
+                    </form>
+
+                    <!-- CAIXA DE FEEDBACK -->
+                    <div class="feedback-box" id="feedback-box" aria-live="polite">
+                        <div class="feedback-header" id="feedback-header"></div>
+                        <div id="feedback-text"></div>
+                    </div>
+
+                    <div class="actions-container">
+                        <button class="btn" id="next-btn" disabled>
+                            Próxima Pergunta <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- TELA DE RESULTADOS -->
+                <section id="result-screen" class="result-screen">
+                    <div class="rank-badge-large" id="result-icon">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <h2 class="result-title">Desafio Concluído!</h2>
+                    <div class="rank-name" id="rank-title">Classificação Ninja</div>
+
+                    <div class="score-display-card">
+                        <div class="score-item">
+                            <span class="score-val" id="score-hits">0/15</span>
+                            <span class="score-lbl">Acertos</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-val" id="score-grade">0.0</span>
+                            <span class="score-lbl">Nota Final</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-val" id="score-percent">0%</span>
+                            <span class="score-lbl">Aproveitamento</span>
+                        </div>
+                    </div>
+
+                    <p class="result-description" id="result-desc"></p>
+
+                    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn" id="restart-btn">
+                            <i class="fa-solid fa-rotate-right"></i> Reiniciar Desafio
+                        </button>
+                        <button class="btn btn-secondary" id="modal-team-btn">
+                            <i class="fa-solid fa-users"></i> Ver Integrantes / GitHub
+                        </button>
+                    </div>
+                </section>
+
+            </article>
+        </main>
+    </div>
+
+    <!-- MODAL INTEGRANTES E INSTRUÇÕES GITHUB PAGES -->
+    <div class="modal-backdrop" id="team-modal" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-labelledby="modal-title">
+            <button class="modal-close" id="close-modal-btn" aria-label="Fechar modal">&times;</button>
+            <h3 class="modal-title" id="modal-title"><i class="fa-solid fa-graduation-cap"></i> Projeto Escolar / Trabalho em Equipe</h3>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">
+                Identificação dos alunos (1 a 5 integrantes) para avaliação do projeto interativo.
+            </p>
+
+            <form class="team-form" id="team-form">
+                <div class="form-group">
+                    <label for="student1">Aluno 1 (Líder do Grupo)</label>
+                    <input type="text" id="student1" class="form-control" value="Naruto Uzumaki" placeholder="Nome completo">
+                </div>
+                <div class="form-group">
+                    <label for="student2">Aluno 2</label>
+                    <input type="text" id="student2" class="form-control" value="Sasuke Uchiha" placeholder="Nome completo (Opcional)">
+                </div>
+                <div class="form-group">
+                    <label for="student3">Aluno 3</label>
+                    <input type="text" id="student3" class="form-control" value="Sakura Haruno" placeholder="Nome completo (Opcional)">
+                </div>
+                <div class="form-group">
+                    <label for="student4">Aluno 4</label>
+                    <input type="text" id="student4" class="form-control" value="Kakashi Hatake" placeholder="Nome completo (Opcional)">
+                </div>
+                <div class="form-group">
+                    <label for="student5">Aluno 5</label>
+                    <input type="text" id="student5" class="form-control" value="" placeholder="Nome completo (Opcional)">
+                </div>
+                <button type="button" class="btn" id="save-team-btn" style="align-self: flex-start; padding: 8px 16px; font-size: 0.85rem;">
+                    Salvar Integrantes
+                </button>
+            </form>
+
+            <div class="github-instructions">
+                <h4 style="color: var(--chakra-blue); margin-bottom: 8px;"><i class="fa-brands fa-github"></i> Status da Hospedagem (GitHub Pages):</h4>
+                <p>Para publicar este arquivo no GitHub Pages:</p>
+                <ol style="margin-left: 18px; margin-top: 5px;">
+                    <li>Nomeie este arquivo como <code>index.html</code> no repositório.</li>
+                    <li>Inclua um arquivo <code>README.md</code> contendo os nomes salvos acima.</li>
+                    <li>Acesse as <i>Settings -> Pages</i> do seu repositório no GitHub.</li>
+                    <li>Selecione a branch <code>main</code> e a pasta <code>/(root)</code>, e clique em Save.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER SEMÂNTICO -->
+    <footer role="contentinfo">
+        <div class="footer-content">
+            <div>&copy; 2026 Quiz Ninja de Naruto. Desenvolvido para Fins Acadêmicos.</div>
+            <div>
+                <span class="footer-link" id="open-team-link"><i class="fa-solid fa-users"></i> Equipe do Projeto</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- LÓGICA JAVASCRIPT INTERATIVA -->
+    <script>
+        /**
+         * BANCO DE DADOS DAS 15 PERGUNTAS DE NARUTO
+         * Inclui validação, nível de dificuldade e justificativas didáticas.
+         */
+        const quizQuestions = [
+            {
+                question: "1. Quem foi o primeiro mestre de Naruto Uzumaki na Academia Ninja que realmente o reconheceu e salvou sua vida?",
+                options: ["Kakashi Hatake", "Iruka Umino", "Jiraiya", "Maito Gai"],
+                answer: 1,
+                difficulty: "facil",
+                explanation: "Iruka Umino foi a primeira figura de autoridade a reconhecer Naruto, enxergando além do monstro selado nele e salvando-o de Mizuki no 1º episódio."
+            },
+            {
+                question: "2. Qual é o nome verdadeiro do demônio de nove caudas (Kyuubi) selado dentro de Naruto?",
+                options: ["Gyuki", "Isobu", "Kurama", "Shukaku"],
+                answer: 2,
+                difficulty: "facil",
+                explanation: "O nome verdadeiro do Nove-Caudas é Kurama. Gyuki é o 8 caudas e Shukaku o 1 cauda."
+            },
+            {
+                question: "3. Qual o significado do kanji marcado na testa de Gaara da Vila da Areia?",
+                options: ["Ódio (Ken'o)", "Amor (Ai)", "Força (Chikara)", "Morte (Shi)"],
+                answer: 1,
+                difficulty: "facil",
+                explanation: "O kanji na testa de Gaara significa 'Amor' (Ai), marcado por ele mesmo com sua areia após o trauma da traição de seu tio Yashamaru."
+            },
+            {
+                question: "4. Qual é o Jutsu de manipulação de forma exclusivo criado por Minato Namikaze que leva anos para ser mastered?",
+                options: ["Chidori", "Rasengan", "Kage Bunshin no Jutsu", "Amaterasu"],
+                answer: 1,
+                difficulty: "facil",
+                explanation: "Minato Namikaze (o 4º Hokage) levou 3 anos para criar e aperfeiçoar o Rasengan, que não requer selos de mão."
+            },
+            {
+                question: "5. Quem foi o fundador e líder conceitual original da Akatsuki criada em Amegakure junto com Nagato e Konan?",
+                options: ["Yahiko", "Pain", "Sasori", "Obito Uchiha"],
+                answer: 0,
+                difficulty: "medio",
+                explanation: "Yahiko fundou a Akatsuki original com o objetivo de buscar a paz sem violência. Após sua morte, Nagato assumiu sob a alcunha de Pain."
+            },
+            {
+                question: "6. Qual elemento de chakra é a transformação de natureza natural primária de Naruto Uzumaki?",
+                options: ["Fogo (Katon)", "Água (Suiton)", "Trovão (Raiton)", "Vento (Fūton)"],
+                answer: 3,
+                difficulty: "facil",
+                explanation: "A afinidade natural de Naruto é o Vento (Fūton), que ele usa para desenvolver o devastador Fūton: Rasenshuriken."
+            },
+            {
+                question: "7. Quem declarou oficialmente a Quarta Grande Guerra Ninja durante a Reunião dos Cincos Kages?",
+                options: ["Kabuto Yakushi", "Madara Uchiha verdadeiro", "Obito Uchiha (disfarçado de Madara)", "Danzo Shimura"],
+                answer: 2,
+                difficulty: "medio",
+                explanation: "Obito Uchiha, apresentando-se falsamente como Madara Uchiha, declarou a 4ª Guerra Ninja ao não entregarem as duas Bijuus restantes."
+            },
+            {
+                question: "8. Qual o nome do dojutsu lendário despertado no olho esquerdo de Sasuke Uchiha diretamente do Rikkudo Sennin?",
+                options: ["Byakugan", "Mangekyou Sharingan Eterno", "Rinnegan Supremo", "Tenseigan"],
+                answer: 2,
+                difficulty: "medio",
+                explanation: "Sasuke recebeu metade do chakra do Sábio dos Seis Caminhos, despertando um Rinnegan Supremo com tomoe em seu olho esquerdo."
+            },
+            {
+                question: "9. Qual é a técnica proibida de Taijutsu capaz de conceder força imensa ao custo do próprio corpo usada por Rock Lee e Maito Gai?",
+                options: ["Hiraishin no Jutsu", "Oito Portões Internos (Hachimon)", "Edo Tensei", "Izanagi"],
+                answer: 1,
+                difficulty: "facil",
+                explanation: "Os Oito Portões Internos deslimitam o fluxo de chakra do corpo. A abertura do 8º Portão (Portão da Morte) libera um poder superior aos 5 Kages."
+            },
+            {
+                question: "10. Qual personagem é lendariamente reconhecido pelas nações ninja como o 'Ninja Copiador' de Konoha?",
+                options: ["Itachi Uchiha", "Kakashi Hatake", "Shisui Uchiha", "Jiraiya"],
+                answer: 1,
+                difficulty: "facil",
+                explanation: "Kakashi Hatake ganhou o título de 'Ninja Copiador' graças ao Sharingan presenteado por Obito, tendo copiado mais de 1000 jutsus."
+            },
+            {
+                question: "11. Qual é o nome do corpo do amigo falecido de Nagato utilizado para ser o 'Caminho Deva' (Pain principal)?",
+                options: ["Yahiko", "Hayate", "Shizune", "Dan"],
+                answer: 0,
+                difficulty: "medio",
+                explanation: "O Caminho Deva (o Pain principal) foi feito a partir do cadáver de Yahiko, o melhor amigo de infância de Nagato e Konan."
+            },
+            {
+                question: "12. Quem realizou o ritual de selamento da raposa Kurama dentro do recém-nascido Naruto?",
+                options: ["Jiraiya", "Hiruzen Sarutobi (3º Hokage)", "Minato Namikaze (4º Hokage)", "Kushina Uzumaki"],
+                answer: 2,
+                difficulty: "medio",
+                explanation: "Minato Namikaze utilizou o Jutsu do Selo do Ceifador da Morte para selar a metade Yin/Yang de Kurama em Naruto e em si mesmo."
+            },
+            {
+                question: "13. Qual o nome do lendário clã ao qual pertence Tsunade, a Quinta Hokage?",
+                options: ["Clã Uzumaki", "Clã Senju", "Clã Uchiha", "Clã Hyuuga"],
+                answer: 1,
+                difficulty: "medio",
+                explanation: "Tsunade é neta direta de Hashirama Senju (o 1º Hokage), pertencendo portanto ao renomado Clã Senju."
+            },
+            {
+                question: "14. Quais são as duas habilidade técnicas devastadoras concedidas pelo Mangekyou Sharingan nos olhos de Itachi Uchiha?",
+                options: ["Kamui e Kotoamatsukami", "Tsukuyomi e Amaterasu", "Izanami e Chidori", "Limbo e Tengai Shinsei"],
+                answer: 1,
+                difficulty: "dificil",
+                explanation: "O olho esquerdo de Itachi conjura o genjutsu supremo Tsukuyomi, enquanto o olho direito conjura as chamas negras inextinguíveis do Amaterasu."
+            },
+            {
+                question: "15. Desde o primeiro capítulo/episódio da obra, qual é o maior sonho de vida de Naruto Uzumaki?",
+                options: ["Destruir o Clã Uchiha", "Aprender todos os Jutsus do mundo", "Tornar-se Hokage e ser reconhecido por todos na vila", "Encontrar seus pais biológicos"],
+                answer: 2,
+                difficulty: "facil",
+                explanation: "O sonho de Naruto sempre foi se tornar o Hokage para que todos na vila finalmente o respeitassem e o reconhecessem."
+            }
+        ];
+
+        /* ESTADO DA APLICAÇÃO */
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userAnswers = [];
+        let isAnswered = false;
+
+        /* ELEMENTOS DO DOM */
+        const startScreen = document.getElementById('start-screen');
+        const questionScreen = document.getElementById('question-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const statusBar = document.getElementById('status-bar');
+
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        const questionText = document.getElementById('question-text');
+        const optionsForm = document.getElementById('options-form');
+        const feedbackBox = document.getElementById('feedback-box');
+        const feedbackHeader = document.getElementById('feedback-header');
+        const feedbackText = document.getElementById('feedback-text');
+
+        const progressBar = document.getElementById('progress-bar');
+        const questionCountDisplay = document.getElementById('question-count-display');
+        const difficultyDisplay = document.getElementById('difficulty-display');
+
+        // Modal Elements
+        const teamModal = document.getElementById('team-modal');
+        const modalTeamBtn = document.getElementById('modal-team-btn');
+        const openTeamLink = document.getElementById('open-team-link');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const saveTeamBtn = document.getElementById('save-team-btn');
+
+        /* EVENT LISTENERS INICIAIS */
+        document.addEventListener('DOMContentLoaded', () => {
+            startBtn.addEventListener('click', startQuiz);
+            nextBtn.addEventListener('click', handleNextQuestion);
+            restartBtn.addEventListener('click', restartQuiz);
+
+            // Controle de Modal
+            modalTeamBtn.addEventListener('click', () => toggleModal(true));
+            openTeamLink.addEventListener('click', () => toggleModal(true));
+            closeModalBtn.addEventListener('click', () => toggleModal(false));
+            
+            saveTeamBtn.addEventListener('click', () => {
+                alert('Integrantes do grupo salvos para apresentação do trabalho!');
+                toggleModal(false);
+            });
+
+            // Fechar modal clicando fora do card
+            teamModal.addEventListener('click', (e) => {
+                if (e.target === teamModal) toggleModal(false);
+            });
+        });
+
+        /* FUNÇÃO PARA INICIAR O QUIZ */
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            
+            startScreen.style.display = 'none';
+            resultScreen.style.display = 'none';
+            questionScreen.style.display = 'block';
+            statusBar.style.display = 'flex';
+
+            loadQuestion();
+        }
+
+        /* CARREGAR PERGUNTA ATUAL */
+        function loadQuestion() {
+            isAnswered = false;
+            nextBtn.disabled = true;
+            feedbackBox.style.display = 'none';
+            feedbackBox.className = 'feedback-box';
+
+            const currentQ = quizQuestions[currentQuestionIndex];
+
+            // Atualiza status e progresso
+            questionCountDisplay.innerHTML = `<i class="fa-solid fa-khanda"></i> Pergunta ${currentQuestionIndex + 1} de ${quizQuestions.length}`;
+            const progressPercent = ((currentQuestionIndex) / quizQuestions.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            // Dificuldade Badge
+            difficultyDisplay.className = `difficulty-tag diff-${currentQ.difficulty}`;
+            difficultyDisplay.textContent = currentQ.difficulty.toUpperCase();
+
+            // Texto da Pergunta
+            questionText.textContent = currentQ.question;
+
+            // Renderiza Opções
+            optionsForm.innerHTML = '';
+            const optionLetters = ['A', 'B', 'C', 'D'];
+
+            currentQ.options.forEach((opt, idx) => {
+                const label = document.createElement('label');
+                label.className = 'option-label';
+                label.setAttribute('for', `opt-${idx}`);
+
+                label.innerHTML = `
+                    <input type="radio" name="quiz-option" id="opt-${idx}" value="${idx}" class="option-input">
+                    <span class="option-prefix">${optionLetters[idx]}</span>
+                    <span class="option-text">${opt}</span>
+                    <i class="fa-solid option-icon" id="icon-${idx}"></i>
+                `;
+
+                // Evento ao clicar na opção
+                label.addEventListener('click', () => {
+                    if (!isAnswered) {
+                        selectOption(idx);
+                    }
+                });
+
+                optionsForm.appendChild(label);
+            });
+        }
+
+        /* PROCESSA A SELEÇÃO DA RESPOSTA EM TEMPO REAL */
+        function selectOption(selectedIndex) {
+            isAnswered = true;
+            const currentQ = quizQuestions[currentQuestionIndex];
+            const isCorrect = selectedIndex === currentQ.answer;
+
+            if (isCorrect) score++;
+
+            userAnswers.push({
+                questionIndex: currentQuestionIndex,
+                selected: selectedIndex,
+                correct: isCorrect
+            });
+
+            // Desabilita todas as opções para evitar alteração
+            const labels = optionsForm.querySelectorAll('.option-label');
+            labels.forEach((lbl, idx) => {
+                lbl.classList.add('disabled');
+                const icon = lbl.querySelector('.option-icon');
+
+                if (idx === currentQ.answer) {
+                    // Marca a correta com verde
+                    lbl.classList.add('correct');
+                    icon.className = 'fa-solid fa-circle-check option-icon';
+                } else if (idx === selectedIndex && !isCorrect) {
+                    // Marca a selecionada errada com vermelho
+                    lbl.classList.add('incorrect');
+                    icon.className = 'fa-solid fa-circle-xmark option-icon';
+                }
+            });
+
+            // Exibe Feedback Imediato
+            feedbackBox.style.display = 'block';
+            if (isCorrect) {
+                feedbackBox.classList.add('correct-fb');
+                feedbackHeader.innerHTML = `<i class="fa-solid fa-circle-check" style="color: var(--leaf-green);"></i> Resposta Correta! Mandou bem, ninja!`;
+            } else {
+                feedbackBox.classList.add('incorrect-fb');
+                feedbackHeader.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: var(--sharingan-red);"></i> Resposta Incorreta!`;
+            }
+            feedbackText.textContent = currentQ.explanation;
+
+            // Habilita o botão para avançar
+            nextBtn.disabled = false;
+        }
+
+        /* NAVEGAÇÃO PARA A PRÓXIMA PERGUNTA */
+        function handleNextQuestion() {
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < quizQuestions.length) {
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        /* FINALIZAR QUIZ E EXIBIR RESULTADOS */
+        function finishQuiz() {
+            questionScreen.style.display = 'none';
+            statusBar.style.display = 'none';
+            resultScreen.style.display = 'block';
+
+            // Barra de progresso 100%
+            progressBar.style.width = '100%';
+
+            // Cálculos
+            const total = quizQuestions.length;
+            const grade = ((score / total) * 10).toFixed(1);
+            const percentage = Math.round((score / total) * 100);
+
+            document.getElementById('score-hits').textContent = `${score}/${total}`;
+            document.getElementById('score-grade').textContent = grade;
+            document.getElementById('score-percent').textContent = `${percentage}%`;
+
+            // Atribuição de Patente Ninja com base na nota
+            let rank = "";
+            let desc = "";
+            let iconClass = "fa-award";
+
+            if (score === 15) {
+                rank = "Patente Ninja: HOKAGE!";
+                desc = "Perfeito! Você possui um conhecimento lendário comparável ao próprio Deus dos Shinobis. A vila inteira te reconhece!";
+                iconClass = "fa-crown";
+            } else if (score >= 12) {
+                rank = "Patente Ninja: ANBU / JOUNIN";
+                desc = "Excelente! Seu domínio sobre o universo de Naruto é extraordinário. Você está pronto para liderar missões de nível S.";
+                iconClass = "fa-shield-halved";
+            } else if (score >= 8) {
+                rank = "Patente Ninja: CHUNIN";
+                desc = "Bom trabalho! Você passou no Exame Chunin com mérito. Continue treinando para alcançar o nível dos Jounins!";
+                iconClass = "fa-user-ninja";
+            } else if (score >= 5) {
+                rank = "Patente Ninja: GENIN";
+                desc = "Você graduou na Academia, mas ainda precisa treinar o seu chakra e rever as sagas de Naruto com mais atenção.";
+                iconClass = "fa-scroll";
+            } else {
+                rank = "Estudante da Academia Ninja";
+                desc = "Parece que você precisa voltar para as aulas do mestre Iruka! Que tal assistir ao anime novamente e refazer o teste?";
+                iconClass = "fa-book-open";
+            }
+
+            document.getElementById('rank-title').textContent = rank;
+            document.getElementById('result-desc').textContent = desc;
+            document.getElementById('result-icon').innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
+        }
+
+        /* REINICIAR QUIZ */
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        /* TOGGLE MODAL */
+        function toggleModal(show) {
+            if (show) {
+                teamModal.classList.add('active');
+                teamModal.setAttribute('aria-hidden', 'false');
+            } else {
+                teamModal.classList.remove('active');
+                teamModal.setAttribute('aria-hidden', 'true');
+            }
+        }
+    </script>
+</body>
+</html>
